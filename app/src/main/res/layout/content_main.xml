@@ -11,20 +11,19 @@
     android:orientation="vertical"
     android:background="#121213"
     >
-<!--    <RelativeLayout-->
+<!--    <GridLayout-->
+<!--        android:id="@+id/guesses"-->
 <!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:background="@drawable/border"-->
-<!--        android:padding="2dp"-->
-<!--        android:layout_margin="4dp"-->
-<!--        android:layout_gravity="end">-->
-<!--        <Spinner-->
-<!--            android:id="@+id/spinner"-->
-<!--            android:layout_width="150dp"-->
-<!--            android:layout_height="50dp"-->
-<!--            android:backgroundTint="@android:color/white"-->
-<!--            />-->
-<!--    </RelativeLayout>-->
+<!--        android:layout_height="0dp"-->
+<!--        android:gravity="center"-->
+<!--        android:layout_gravity="center"-->
+<!--        android:layout_weight="1"-->
+<!--        android:orientation="vertical">-->
+<!--    </GridLayout>-->
+<!--    <FrameLayout-->
+<!--        android:id="@+id/guesses"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"/>-->
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/g1"
         android:layout_width="match_parent"
@@ -52,6 +51,16 @@
         />
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/g6"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        />
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/g7"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        />
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/g8"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         />

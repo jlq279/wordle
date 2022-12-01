@@ -12,41 +12,104 @@
     android:layout_height="match_parent"
     android:gravity="center_horizontal">
     <!--Write me-->
+    <EditText
+        android:id="@+id/dictionaryName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:textColor="@android:color/white"
+        android:hint="Name of Dictionary"
+        android:textColorHint="@android:color/darker_gray"
+        android:backgroundTint="@android:color/white"/>
+    <Button
+        android:id="@+id/importButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Import new dictionary"/>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Number of songs played:"
+            android:text="Dictionary:"
             android:textStyle="bold"
             android:textSize="20sp"
+            android:textColor="@android:color/white"
             android:layout_margin="8dp"
+            android:layout_weight="1"
             />
-        <TextView
-            android:id="@+id/numSongs"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:layout_margin="8dp"
-            />
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/border"
+                android:padding="2dp"
+                android:layout_margin="4dp"
+                android:layout_gravity="end">
+                <Spinner
+                    android:id="@+id/dictionary"
+                    android:layout_width="150dp"
+                    android:layout_height="50dp"
+                    android:backgroundTint="@android:color/white"
+                    />
+            </RelativeLayout>
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_margin="8dp">
+        android:orientation="horizontal">
         <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:text="Word length:"
+            android:textColor="@android:color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_weight="1"/>
+        <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Loop:"
-            android:layout_margin="8dp"/>
-        <Switch
-            android:id="@+id/loop"
+            android:background="@drawable/border"
+            android:padding="2dp"
+            android:layout_margin="4dp"
+            android:layout_gravity="end">
+            <Spinner
+                android:id="@+id/length"
+                android:layout_width="150dp"
+                android:layout_height="50dp"
+                android:backgroundTint="@android:color/white"
+                />
+        </RelativeLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:text="Guesses:"
+            android:textColor="@android:color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_weight="1"/>
+        <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"/>
+            android:background="@drawable/border"
+            android:padding="2dp"
+            android:layout_margin="4dp"
+            android:layout_gravity="end">
+            <Spinner
+                android:id="@+id/guesses"
+                android:layout_width="150dp"
+                android:layout_height="50dp"
+                android:backgroundTint="@android:color/white"
+                />
+        </RelativeLayout>
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"

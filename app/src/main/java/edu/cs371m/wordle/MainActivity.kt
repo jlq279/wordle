@@ -1,10 +1,13 @@
 package edu.cs371m.wordle
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
@@ -12,33 +15,23 @@ import edu.cs371m.wordle.databinding.ActivityMainBinding
 import edu.cs371m.wordle.databinding.ContentMainBinding
 import edu.cs371m.wordle.ui.main.GuessFragment
 
-// https://opentdb.com/api_config.php
 class MainActivity :
     AppCompatActivity()
 {
-    companion object {
-        val TAG = this::class.java.simpleName
-    }
-    private val frags = listOf(
-        GuessFragment.newInstance(0),
-        GuessFragment.newInstance(1),
-        GuessFragment.newInstance(2),
-        GuessFragment.newInstance(3),
-        GuessFragment.newInstance(4),
-        GuessFragment.newInstance(5)
-    )
-    val dictionaryList = listOf("Default")
     private lateinit var contentMainBinding: ContentMainBinding
-    private val viewModel: MainViewModel by viewModels() // XXX need to initialize the viewmodel (from an activity)
+    private val viewModel: MainViewModel by viewModels()
     private var word = ""
     private var playing = false
-    var targetWord = ""
+    private var dictionary = "default"
+    private var targetWord = ""
+    private var wordLength = 5
+    private var numGuesses = 6
+    private var selectedDictionaryPosition = 0
+    private var selectedLengthPosition = 2
+    private var selectedGuessesPosition = 2
 
     @SuppressLint("UseCompatLoadingForDrawables")
     private fun setKeyboardListeners() {
-        viewModel.getTarget().observe(this) { target ->
-            targetWord = target
-        }
         viewModel.isPlaying().observe(this){ isPlaying ->
             playing = isPlaying
         }
@@ -51,43 +44,51 @@ class MainActivity :
             }
         }
         viewModel.getGuess().observe(this){ guess ->
-            word = guess;
+            word = guess
         }
         val letters = arrayOf(contentMainBinding.keyboard.a,contentMainBinding.keyboard.b,contentMainBinding.keyboard.c,contentMainBinding.keyboard.d,contentMainBinding.keyboard.e,contentMainBinding.keyboard.f,contentMainBinding.keyboard.g,contentMainBinding.keyboard.h,contentMainBinding.keyboard.i,contentMainBinding.keyboard.j,contentMainBinding.keyboard.k,contentMainBinding.keyboard.l,contentMainBinding.keyboard.m,contentMainBinding.keyboard.n,contentMainBinding.keyboard.o,contentMainBinding.keyboard.p,contentMainBinding.keyboard.q,contentMainBinding.keyboard.r,contentMainBinding.keyboard.s,contentMainBinding.keyboard.t,contentMainBinding.keyboard.u,contentMainBinding.keyboard.v,contentMainBinding.keyboard.w,contentMainBinding.keyboard.x,contentMainBinding.keyboard.y,contentMainBinding.keyboard.z)
         for (i in letters.indices) {
             letters[i].setOnClickListener {
                 if (playing) {
-                    if (word.length < 5) {
+                    if (word.length < wordLength) {
                         word = word.plus(('a'.plus(i)))
                         viewModel.updateGuess(word)
                     }
                 }
             }
         }
-        viewModel.observeResult().observe(this){ result ->
-            if (result != null) {
-                if (result.result) {
-                    for (i in result.word.indices) {
-                        val letterBackground = letters[result.word[i].minus('a')].background
-                        val correct = resources.getDrawable(R.drawable.rounded_corners_correct)
-                        val present = resources.getDrawable(R.drawable.rounded_corners_present)
-                        val incorrect = resources.getDrawable(R.drawable.rounded_corners_incorrect)
-                        if (result.word[i] == targetWord[i]) {
-                            letters[result.word[i].minus('a')].background = correct
-                        }
-                        else if (targetWord.contains(result.word[i]) && letterBackground != correct) {
-                            letters[result.word[i].minus('a')].background = present
-                        }
-                        else if (letterBackground != correct && letterBackground != present){
-                            letters[result.word[i].minus('a')].background = incorrect
-                        }
+        var correctLetters = emptyList<Char>()
+        var presentLetters = emptyList<Char>()
+        viewModel.observeGuesses().observe(this){ guesses ->
+            if (guesses.isNotEmpty()) {
+                val word = guesses.last()
+                for (i in word.indices) {
+                    val letter = letters[word[i].minus('a')]
+                    val correct = resources.getDrawable(R.drawable.rounded_corners_correct)
+                    val present = resources.getDrawable(R.drawable.rounded_corners_present)
+                    val incorrect = resources.getDrawable(R.drawable.rounded_corners_incorrect)
+                    if (word[i] == targetWord[i]) {
+                        letter.background = correct
+                        correctLetters = correctLetters.plus(word[i])
                     }
+                    else if (targetWord.contains(word[i]) && !correctLetters.contains(word[i])) {
+                        letter.background = present
+                        presentLetters = presentLetters.plus(word[i])
+                    }
+                    else if (!correctLetters.contains(word[i]) && !presentLetters.contains(word[i])){
+                        letter.background = incorrect
+                    }
+                }
+            }
+            else {
+                for (i in letters.indices) {
+                    letters[i].background = resources.getDrawable(R.drawable.rounded_corners)
                 }
             }
         }
         contentMainBinding.keyboard.enter.setOnClickListener{
             if (playing) {
-                if (word.length < 5) {
+                if (word.length < wordLength) {
                     // Toast
                     Toast.makeText(this, "Not enough letters", Toast.LENGTH_SHORT).show()
                 } else {
@@ -113,55 +114,61 @@ class MainActivity :
         activityMainBiding.toolbar.title = "Wordle"
         setSupportActionBar(activityMainBiding.toolbar)
         contentMainBinding = activityMainBiding.contentMain
+        val numGuesses = viewModel.getGuesses().value!!
         if (savedInstanceState == null) {
-            // XXX Write me: add fragments to layout, swipeRefresh
+            val ids = listOf(R.id.g1, R.id.g2, R.id.g3, R.id.g4, R.id.g5, R.id.g6, R.id.g7, R.id.g8)
             supportFragmentManager.commit {
                 setReorderingAllowed(true)
-                add(R.id.g1, frags[0])
-                add(R.id.g2, frags[1])
-                add(R.id.g3, frags[2])
-                add(R.id.g4, frags[3])
-                add(R.id.g5, frags[4])
-                add(R.id.g6, frags[5])
+                for (i in 0 until numGuesses) {
+                    add(ids[i], GuessFragment.newInstance(i))
+                }
+            }
+            viewModel.getGuesses().observe(this){ guesses ->
+                for (fragment in supportFragmentManager.fragments) {
+                    supportFragmentManager.beginTransaction().remove(fragment).commit()
+                }
+                supportFragmentManager.commit {
+                    setReorderingAllowed(true)
+                    for (i in 0 until guesses) {
+                        add(ids[i], GuessFragment.newInstance(i))
+                    }
+                }
             }
         }
+        viewModel.getTarget().observe(this) { target ->
+            targetWord = target
+        }
         setKeyboardListeners()
-//        // Please enjoy this code that manages the spinner
-//        // Create an ArrayAdapter using a simple spinner layout and languages array
-//        val aa = ArrayAdapter(this, R.layout.spinner_list, dictionaryList)
-//        // Set layout to use when the list of choices appear
-////        aa.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-//        aa.setDropDownViewResource(R.layout.spinner_list)
-//        // Create the object as we are assigning it
-//        contentMainBinding.spinner.onItemSelectedListener = object :
-//            AdapterView.OnItemSelectedListener {
-//            override fun onItemSelected(parent: AdapterView<*>,
-//                                        view: View, position: Int, id: Long) {
-//                Log.d(TAG, "pos $position")
-////                viewModel.setDictionary(dictionaryList[position])
-//            }
-//
-//            override fun onNothingSelected(parent: AdapterView<*>) {
-//                Log.d(TAG, "onNothingSelected")
-//            }
-//        }
-//        // Set Adapter to Spinner
-//        contentMainBinding.spinner.adapter = aa
-//        // Set initial value of spinner to medium
-//        val initialSpinner = 0
-//        contentMainBinding.spinner.setSelection(initialSpinner)
-////        viewModel.setDictionary(dictionaryList[initialSpinner])
+        viewModel.startGame(dictionary, wordLength, numGuesses)
     }
+
+    private var resultLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                viewModel.getTarget().observe(this) { target ->
+                    targetWord = target
+                }
+                dictionary = result.data?.getStringExtra(SettingsManager.dictionaryId) ?: "default"
+                wordLength = result.data?.getIntExtra(SettingsManager.wordLength, 5) ?: 5
+                numGuesses = result.data?.getIntExtra(SettingsManager.numGuesses, 6) ?: 6
+                selectedDictionaryPosition = result.data?.getIntExtra(SettingsManager.dictionaryIdx, 0) ?: 0
+                selectedLengthPosition = result.data?.getIntExtra(SettingsManager.lengthIdx, 2) ?: 2
+                selectedGuessesPosition = result.data?.getIntExtra(SettingsManager.guessesIdx, 2) ?: 2
+                if (result.data?.getBooleanExtra(SettingsManager.changedSetting, false) == true) {
+                    viewModel.startGame(dictionary, wordLength, numGuesses)
+                }
+            }
+        }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu, menu)
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here.
         val id = item.itemId
-
         return if (id == R.id.action_settings) {
             settingsButton(item)
             true
@@ -170,13 +177,13 @@ class MainActivity :
     }
 
     private fun settingsButton(@Suppress("UNUSED_PARAMETER") item: MenuItem) {
-        // XXX Write me
-//        item.setOnMenuItemClickListener {
-//            val intent = Intent(this, SettingsManager::class.java)
-//            intent.putExtra(SettingsManager.doLoopKey, looping)
-//            intent.putExtra(SettingsManager.songsPlayedKey, songsPlayed)
-//            resultLauncher.launch(intent)
-//            true
-//        }
+        item.setOnMenuItemClickListener {
+            val intent = Intent(this, SettingsManager::class.java)
+            intent.putExtra(SettingsManager.dictionaryIdx, selectedDictionaryPosition)
+            intent.putExtra(SettingsManager.lengthIdx, selectedLengthPosition)
+            intent.putExtra(SettingsManager.guessesIdx, selectedGuessesPosition)
+            resultLauncher.launch(intent)
+            true
+        }
     }
 }
